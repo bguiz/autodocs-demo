@@ -23,6 +23,6 @@
   },
   "homepage": "https://github.com/bguiz/autodocs-demo",
   "devDependencies": {
-    "autodocs": "^0.4.5"
+    "autodocs": "git://github.com/bguiz/autodocs.git#feature/links-and-branch"
   }
 }
