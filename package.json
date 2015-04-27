@@ -23,6 +23,6 @@
   },
   "homepage": "https://github.com/bguiz/autodocs-demo",
   "devDependencies": {
-    "autodocs": "^0.5.0"
+    "autodocs": "git://github.com/bguiz/autodocs.git#develop"
   }
 }
