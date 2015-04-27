@@ -279,25 +279,27 @@
                             });
                           }
                         
-                          var numGhpagesBranches;
+                          var numPublishBranches;
                         
                           function ghpagesBranch() {
                             console.log(&#x27;Set up branch&#x27;);
-                            execute(&quot;git ls-remote --heads ${REPO_URL_UNAUTH} | grep &#x27;refs\\\/heads\\\/gh-pages&#x27; | wc -l&quot;, {
+                            var executeStatement = &quot;git ls-remote --heads &quot;+vars.REPO_URL_UNAUTH+&quot; | grep &#x27;refs\\\/heads\\\/&quot;+vars.GH_PUBLISH_BRANCH+&quot;&#x27; | wc -l&quot;;
+                            console.log(executeStatement);
+                            execute(executeStatement, {
                               cwd: projectDir,
                               env: vars,
                             }, function(err, stdout, stderr) {
-                              console.log(&#x27;NUM_GHPAGES_BRANCHES&#x27;, stdout);
+                              console.log(&#x27;NUM_PUBLISH_BRANCHES&#x27;, stdout);
                               if (err) {
                                 console.log(&#x27;err: &#x27;+err);
                                 callback(err);
                               }
                               else {
                                 try {
-                                  numGhpagesBranches = parseInt(stdout.toString().trim(), 10);
+                                  numPublishBranches = parseInt(stdout.toString().trim(), 10);
                                 }
                                 catch (ex) {
-                                  return callback(&#x27;Could not determine whether repo has a gh-pages branch&#x27;);
+                                  return callback(&#x27;Could not determine whether repo has a &#x27;+vars.GH_PUBLISH_BRANCH+&#x27; branch&#x27;);
                                 }
                                 ghpagesBranchImpl();
                               }
@@ -306,14 +308,15 @@
                         
                           function ghpagesBranchImpl() {
                             var execStatement;
-                            if (numGhpagesBranches === 0) {
-                              console.log(&#x27;Creating new gh-pages branch&#x27;);
-                              execStatement = &#x27;git checkout --orphan gh-pages&#x27;;
+                            if (numPublishBranches === 0) {
+                              console.log(&#x27;Creating new &#x27;+vars.GH_PUBLISH_BRANCH+&#x27; branch&#x27;);
+                              execStatement = &#x27;git checkout --orphan &#x27;+vars.GH_PUBLISH_BRANCH;
                             }
                             else {
-                              console.log(&#x27;Using existing gh-pages branch&#x27;);
-                              execStatement = &#x27;git fetch upstream gh-pages &amp;&amp; git checkout gh-pages&#x27;;
+                              console.log(&#x27;Using existing &#x27;+vars.GH_PUBLISH_BRANCH+&#x27; branch&#x27;);
+                              execStatement = &#x27;git fetch upstream &#x27;+vars.GH_PUBLISH_BRANCH+&#x27; &amp;&amp; git checkout &#x27;+vars.GH_PUBLISH_BRANCH;
                             }
+                            console.log(execStatement);
                             execute(execStatement, {
                               cwd: repoDir,
                               env: vars,
@@ -385,12 +388,10 @@
                                   callback(err);
                                 }
                                 else {
-                                  console.log(&#x27;files&#x27;, files);
                                   var testFiles = files.filter(function(file) {
                                     return (file.indexOf(&#x27;all&#x27;) &lt; 0 &amp;&amp;
                                       file.indexOf(&#x27;latest&#x27;) &lt; 0);
                                   });
-                                  console.log(&#x27;testFiles&#x27;, testFiles);
                                   var versionsHtmlFragment = files.filter(function(file) {
                                     return (file.indexOf(&#x27;all&#x27;) &lt; 0 &amp;&amp;
                                       file.indexOf(&#x27;latest&#x27;) &lt; 0 &amp;&amp;
@@ -401,7 +402,11 @@
                                   versionsHtmlFragment = &#x27;&lt;ul&gt;&#x27;+versionsHtmlFragment+&#x27;&lt;/ul&gt;&#x27;;
                                   var inHtml = fs.readFileSync(path.resolve(vars.SCRIPT_DIR, &#x27;all.html&#x27;));
                                   var outHtml = inHtml.toString().replace(&#x27;{{VERSIONLIST}}&#x27;, versionsHtmlFragment);
-                                  fs.mkdirSync(path.resolve(repoDir, vars.ALL_DIR));
+                                  try {
+                                    fs.mkdirSync(path.resolve(repoDir, vars.ALL_DIR));
+                                  } catch (ex) {
+                                    // Do nothing - we don&#x27;t care if the directory already exists
+                                  }
                                   fs.writeFileSync(path.resolve(repoDir, vars.ALL_DIR, &#x27;index.html&#x27;), outHtml);
                                   vars.ALL_ASSETS = vars.ALL_DIR;
                                   createLatestAlias();
